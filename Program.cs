@@ -40,7 +40,7 @@ namespace EvilBot
                     {
                         // Add a new event handler to the MessageCreated event of the discord client
                         // The event handler invokes the "Execute" method of the command type
-                        discord.MessageCreated += new AsyncEventHandler<DiscordClient, MessageCreateEventArgs>((client, e) => (Task?)executeMethod.Invoke(instance, [e]));
+                        discord.MessageCreated += new AsyncEventHandler<DiscordClient, MessageCreateEventArgs>((client, e) => (Task?)executeMethod.Invoke(instance, new object[] { client, e }));
                     }
                 }
             }

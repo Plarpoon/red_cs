@@ -7,7 +7,7 @@ namespace EvilBot.src.commands
     public class PingCommand : ApplicationCommandModule
     {
         [SlashCommand("ping", "Checks the bot's ping to the Discord API")]
-        public async Task Execute(InteractionContext ctx)
+        public static async Task Execute(InteractionContext ctx)
         {
             var embed = new DiscordEmbedBuilder
             {

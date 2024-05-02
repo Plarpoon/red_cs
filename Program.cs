@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using EvilBot.src;
+using System.Reflection;
 using DotNetEnv;
 using DSharpPlus;
 using DSharpPlus.SlashCommands;
@@ -12,11 +13,15 @@ namespace EvilBot
             // Load env variables from the .env file in the root directory
             Env.Load();
 
+            // Setup Serilog logger
+            Logs.ConfigureLogger();
+
             var discord = new DiscordClient(new DiscordConfiguration()
             {
                 Token = Env.GetString("DISCORD_TOKEN"),
                 TokenType = TokenType.Bot,
-                Intents = DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents
+                Intents = DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents,
+                LoggerFactory = new Serilog.Extensions.Logging.SerilogLoggerFactory(),
             });
 
             // Add the SlashCommandsExtension to the DiscordClient
@@ -32,6 +37,14 @@ namespace EvilBot
             {
                 commands.RegisterCommands(commandModule);
             }
+
+            // Subscribe to the Ready event
+            discord.Ready += (s, e) =>
+            {
+                // Log when the bot is ready
+                Serilog.Log.Information("Bot is ready");
+                return Task.CompletedTask;
+            };
 
             await discord.ConnectAsync();
 

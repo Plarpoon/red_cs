@@ -1,28 +1,26 @@
 using DSharpPlus;
-using DSharpPlus.EventArgs;
+using DSharpPlus.SlashCommands;
 using DSharpPlus.Entities;
 
 namespace EvilBot.src.commands
 {
-    public class PingCommand
+    public class PingCommand : ApplicationCommandModule
     {
-        public static async Task Execute(DiscordClient client, MessageCreateEventArgs e)
+        [SlashCommand("ping", "Checks the bot's ping to the Discord API")]
+        public async Task Execute(InteractionContext ctx)
         {
-            if (e.Message.Content.StartsWith("ping", StringComparison.CurrentCultureIgnoreCase))
+            var embed = new DiscordEmbedBuilder
             {
-                var embed = new DiscordEmbedBuilder
+                Title = "🏓 Pong!",
+                Description = $"WebSocket ping is {ctx.Client.Ping}ms",
+                Color = DiscordColor.Green,
+                Footer = new DiscordEmbedBuilder.EmbedFooter
                 {
-                    Title = "🏓 Pong!",
-                    Description = $"WebSocket ping is {client.Ping}ms",
-                    Color = DiscordColor.Green,
-                    Footer = new DiscordEmbedBuilder.EmbedFooter
-                    {
-                        Text = "Ping is checked once every minute to avoid rate limiting"
-                    }
-                };
+                    Text = "Ping is checked once every minute to avoid rate limiting"
+                }
+            };
 
-                await e.Message.RespondAsync(embed: embed);
-            }
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(embed));
         }
     }
 }

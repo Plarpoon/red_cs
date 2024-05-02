@@ -1,5 +1,8 @@
 ﻿using DSharpPlus;
 using DotNetEnv;
+using System.Reflection;
+using DSharpPlus.EventArgs;
+using DSharpPlus.AsyncEvents;
 
 namespace EvilBot
 {
@@ -17,11 +20,23 @@ namespace EvilBot
                 Intents = DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents
             });
 
-            discord.MessageCreated += async (s, e) =>
+            // Load all commands using reflection
+            var commandTypes = Assembly.GetExecutingAssembly()
+                .GetTypes()
+                .Where(t => t.Namespace == "EvilBot.src.commands" && t.GetMethods().Any(m => m.Name == "Execute"));
+
+            foreach (var commandType in commandTypes)
             {
-                if (e.Message.Content.ToLower().StartsWith("ping"))
-                    await e.Message.RespondAsync("pong!");
-            };
+                var executeMethod = commandType.GetMethod("Execute");
+                if (executeMethod != null)
+                {
+                    object? instance = executeMethod.IsStatic ? null : Activator.CreateInstance(commandType);
+                    if (instance != null || executeMethod.IsStatic)
+                    {
+                        discord.MessageCreated += new AsyncEventHandler<DiscordClient, MessageCreateEventArgs>((client, e) => (Task?)executeMethod.Invoke(instance, [e]));
+                    }
+                }
+            }
 
             await discord.ConnectAsync();
             await Task.Delay(-1);

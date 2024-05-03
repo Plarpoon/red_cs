@@ -10,30 +10,61 @@ namespace EvilBot.src.commands
         [Command("join")]
         public static async Task JoinCommand(CommandContext ctx, DiscordChannel? channel = null)
         {
-            channel ??= ctx.Member.VoiceState?.Channel;
-            _ = await channel.ConnectAsync();
+            if (ctx.Member?.VoiceState != null)
+            {
+                channel ??= ctx.Member.VoiceState.Channel;
+            }
+
+            if (channel is not null)
+            {
+                var connection = await channel.ConnectAsync();
+                if (connection != null)
+                {
+                    _ = connection;
+                }
+            }
         }
 
         [Command("play")]
-        public async Task PlayCommand(CommandContext ctx, string path)
+        public static async Task PlayCommand(CommandContext ctx, string path)
         {
             var vnext = ctx.Client.GetVoiceNext();
-            var connection = vnext.GetConnection(ctx.Guild);
 
-            var transmit = connection.GetTransmitSink();
+            if (ctx.Guild is not null)
+            {
+                var connection = vnext?.GetConnection(ctx.Guild);
 
-            var pcm = ConvertAudioToPcm(path);
-            await pcm.CopyToAsync(transmit);
-            await pcm.DisposeAsync();
+                if (connection == null)
+                {
+                    await ctx.RespondAsync("Not connected to a voice channel.");
+                    return;
+                }
+
+                var transmit = connection.GetTransmitSink();
+
+                var pcm = ConvertAudioToPcm(path);
+                await pcm.CopyToAsync(transmit);
+                await pcm.DisposeAsync();
+            }
         }
 
         [Command("leave")]
-        public static void LeaveCommand(CommandContext ctx)
+        public static async Task LeaveCommand(CommandContext ctx)
         {
             var vnext = ctx.Client.GetVoiceNext();
-            var connection = vnext.GetConnection(ctx.Guild);
 
-            connection.Disconnect();
+            if (ctx.Guild is not null)
+            {
+                var connection = vnext?.GetConnection(ctx.Guild);
+
+                if (connection == null)
+                {
+                    await ctx.RespondAsync("Not connected to a voice channel.");
+                    return;
+                }
+
+                connection.Disconnect();
+            }
         }
 
         private static Stream ConvertAudioToPcm(string filePath)
@@ -46,7 +77,7 @@ namespace EvilBot.src.commands
                 UseShellExecute = false
             });
 
-            return ffmpeg.StandardOutput.BaseStream;
+            return ffmpeg?.StandardOutput.BaseStream ?? Stream.Null;
         }
     }
 }

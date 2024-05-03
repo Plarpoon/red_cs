@@ -7,13 +7,15 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="DSharpPlus" Version="5.0.0" />
+    <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-02230" />
     <PackageReference Include="DotNetEnv" Version="3.0.0" />
-    <PackageReference Include="DSharpPlus.SlashCommands" Version="5.0.0" />
+    <PackageReference Include="DsharpPlus.Commands" Version="5.0.0-nightly-02230" />
     <PackageReference Include="Serilog" Version="3.1.1" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+    <PackageReference Include="YoutubeExplode" Version="6.3.14" />
+    <PackageReference Include="DSharpPlus.VoiceNext" Version="5.0.0-nightly-02230" />
   </ItemGroup>
 
 </Project>

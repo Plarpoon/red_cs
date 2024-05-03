@@ -1,13 +1,12 @@
-using DSharpPlus;
-using DSharpPlus.SlashCommands;
+using DSharpPlus.Commands;
 using DSharpPlus.Entities;
 
 namespace EvilBot.src.commands
 {
-    public class PingCommand : ApplicationCommandModule
+    public class PingCommand
     {
-        [SlashCommand("ping", "Checks the bot's ping to the Discord API")]
-        public static async Task Execute(InteractionContext ctx)
+        [Command("ping")]
+        public async Task Execute(CommandContext ctx)
         {
             var embed = new DiscordEmbedBuilder
             {
@@ -20,7 +19,7 @@ namespace EvilBot.src.commands
                 }
             };
 
-            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(embed));
+            await ctx.RespondAsync(embed: embed);
         }
     }
 }

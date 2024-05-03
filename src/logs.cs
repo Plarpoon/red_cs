@@ -17,7 +17,7 @@ namespace EvilBot.src
                 .CreateLogger();
 
             // Test the logger
-            Log.Information("Logger has been initialized");
+            Log.Information("Serilog has been initialized");
         }
     }
 }

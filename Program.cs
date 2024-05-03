@@ -1,8 +1,10 @@
 ﻿using EvilBot.src;
-using System.Reflection;
 using DotNetEnv;
 using DSharpPlus;
-using DSharpPlus.SlashCommands;
+using DSharpPlus.Commands;
+using DSharpPlus.Commands.Processors.TextCommands;
+using DSharpPlus.Commands.Processors.TextCommands.Parsing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace EvilBot
 {
@@ -16,38 +18,47 @@ namespace EvilBot
             // Setup Serilog logger
             Logs.ConfigureLogger();
 
-            var discord = new DiscordClient(new DiscordConfiguration()
+            string? discordToken = Environment.GetEnvironmentVariable("DISCORD_TOKEN");
+            if (string.IsNullOrWhiteSpace(discordToken))
             {
-                Token = Env.GetString("DISCORD_TOKEN"),
-                TokenType = TokenType.Bot,
-                Intents = DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents,
-                LoggerFactory = new Serilog.Extensions.Logging.SerilogLoggerFactory(),
-            });
-
-            // Add the SlashCommandsExtension to the DiscordClient
-            var commands = discord.UseSlashCommands();
-
-            // Get all types in the "EvilBot.src.commands" namespace that inherit from ApplicationCommandModule
-            var commandModules = Assembly.GetExecutingAssembly()
-                .GetTypes()
-                .Where(t => t.Namespace == "EvilBot.src.commands" && t.IsSubclassOf(typeof(ApplicationCommandModule)));
-
-            // Register all command modules
-            foreach (var commandModule in commandModules)
-            {
-                commands.RegisterCommands(commandModule);
+                Console.WriteLine("Error: No discord token found. Please provide a token via the DISCORD_TOKEN environment variable.");
+                Environment.Exit(1);
             }
 
-            // Subscribe to the Ready event
-            discord.Ready += (s, e) =>
+            DiscordShardedClient discordClient = new(new DiscordConfiguration()
             {
-                // Log when the bot is ready
-                Serilog.Log.Information("Bot is ready");
-                return Task.CompletedTask;
-            };
+                Token = discordToken,
+                Intents = DiscordIntents.AllUnprivileged | DiscordIntents.GuildMessages,
+                LoggerFactory = new Serilog.Extensions.Logging.SerilogLoggerFactory()
+            });
 
-            await discord.ConnectAsync();
+            // Create a new service collection and add your services
+            var services = new ServiceCollection()
+                // Add other services as needed
+                .BuildServiceProvider();
 
+            // Use the commands extension
+            IReadOnlyDictionary<int, CommandsExtension> commandsExtensions = await discordClient.UseCommandsAsync(new CommandsConfiguration()
+            {
+                ServiceProvider = services,
+                RegisterDefaultCommandProcessors = true
+            });
+
+            // Iterate through each Discord shard
+            foreach (CommandsExtension commandsExtension in commandsExtensions.Values)
+            {
+                // Add all commands by scanning the current assembly
+                commandsExtension.AddCommands(typeof(Program).Assembly);
+                TextCommandProcessor textCommandProcessor = new(new()
+                {
+                    PrefixResolver = new DefaultPrefixResolver("?").ResolvePrefixAsync
+                });
+
+                // Add text commands with a custom prefix (?ping)
+                await commandsExtension.AddProcessorsAsync(textCommandProcessor);
+            }
+
+            await discordClient.StartAsync();
             await Task.Delay(-1);
         }
     }

@@ -18,10 +18,12 @@ namespace EvilBot
             // Setup Serilog logger
             Logs.ConfigureLogger();
 
+            Serilog.Log.Debug("New EvilBunny instance has been launched");
+
             string? discordToken = Environment.GetEnvironmentVariable("DISCORD_TOKEN");
             if (string.IsNullOrWhiteSpace(discordToken))
             {
-                Console.WriteLine("Error: No discord token found. Please provide a token via the DISCORD_TOKEN environment variable.");
+                Serilog.Log.Fatal("Error: No discord token found. Please provide a token via the DISCORD_TOKEN environment variable.");
                 Environment.Exit(1);
             }
 

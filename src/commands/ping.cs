@@ -6,7 +6,7 @@ namespace EvilBot.src.commands
     public class PingCommand
     {
         [Command("ping")]
-        public async Task Execute(CommandContext ctx)
+        public static async Task Execute(CommandContext ctx)
         {
             var embed = new DiscordEmbedBuilder
             {

@@ -10,7 +10,7 @@ namespace EvilBot.src
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Fatal) // Ignore non-fatal log events from Microsoft
                 .WriteTo.Console()
-                .WriteTo.File($"logs/log-{DateTime.Now:HH-mm_dd-MM-yyyy}.txt",
+                .WriteTo.File($"logs/log-{DateTime.Now:dd-MM-yyyy}.txt",
                     outputTemplate: "{Timestamp:HH:mm} [{Level}] {Message}{NewLine}{Exception}",
                     rollOnFileSizeLimit: true,
                     retainedFileCountLimit: 5)

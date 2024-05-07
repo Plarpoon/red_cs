@@ -5,6 +5,7 @@ using DSharpPlus.Commands;
 using DSharpPlus.Commands.Processors.TextCommands;
 using DSharpPlus.Commands.Processors.TextCommands.Parsing;
 using Microsoft.Extensions.DependencyInjection;
+using DSharpPlus.VoiceNext;
 
 namespace EvilBot
 {
@@ -34,8 +35,15 @@ namespace EvilBot
                 LoggerFactory = new Serilog.Extensions.Logging.SerilogLoggerFactory()
             });
 
-            // Call the method to enable VoiceNext
-            VoiceNextConfig.EnableVoiceNext(discordClient);
+            // Initialize VoiceNext for each shard
+            foreach (var shard in discordClient.ShardClients.Values)
+            {
+                var vnext = shard.UseVoiceNext(new VoiceNextConfiguration
+                {
+                    AudioFormat = AudioFormat.Default,
+                    EnableIncoming = false
+                });
+            }
 
             // Create a new service collection and add your services
             var services = new ServiceCollection()

@@ -1,83 +1,62 @@
 using DSharpPlus.Commands;
-using DSharpPlus.Entities;
 using DSharpPlus.VoiceNext;
-using System.Diagnostics;
 
+// Define the namespace for the commands
 namespace EvilBot.src.commands
 {
+    // Define the class for the Youtube command
     public class YoutubeCommand
     {
-        [Command("join")]
-        public static async Task JoinCommand(CommandContext ctx, DiscordChannel? channel = null)
+        // Define the command for listing channels
+        [Command("listvc")]
+        public static async Task ListChannels(CommandContext ctx)
         {
-            if (ctx.Member?.VoiceState != null)
+            // Get the guild (server) where the command was issued
+            var guild = ctx.Guild;
+
+            // Get a list of voice channels in the guild
+            var voiceChannels = guild?.Channels.Values.Where(c => c.Type == DSharpPlus.Entities.DiscordChannelType.Voice).ToList();
+
+            // Prepare the response message
+            string response = "Available voice channels:\n";
+
+            // Add each channel to the response message
+            if (voiceChannels is not null)
             {
-                channel ??= ctx.Member.VoiceState.Channel;
+                foreach (var channel in voiceChannels)
+                {
+                    response += $"- {channel.Name}\n";
+                }
             }
 
+            // Send the response message
+            await ctx.RespondAsync(response);
+        }
+
+        // Define the command for joining a channel
+        [Command("joinvc")]
+        public static async Task JoinChannel(CommandContext ctx, string channelName)
+        {
+            // Get the guild (server) where the command was issued
+            var guild = ctx.Guild;
+
+            // Find the channel with the given name
+            var channel = guild?.Channels.Values.FirstOrDefault(c => c.Type == DSharpPlus.Entities.DiscordChannelType.Voice && c.Name == channelName);
+
+            // If the channel was found...
             if (channel is not null)
             {
-                var connection = await channel.ConnectAsync();
-                if (connection != null)
-                {
-                    _ = connection;
-                }
+                // Connect to the channel
+                await channel.ConnectAsync();
+
+                // Send a message indicating the bot has joined the channel
+                await ctx.RespondAsync($"Joined channel: {channelName}");
             }
-        }
-
-        [Command("play")]
-        public static async Task PlayCommand(CommandContext ctx, string path)
-        {
-            var vnext = ctx.Client.GetVoiceNext();
-
-            if (ctx.Guild is not null)
+            else
             {
-                var connection = vnext?.GetConnection(ctx.Guild);
-
-                if (connection == null)
-                {
-                    await ctx.RespondAsync("Not connected to a voice channel.");
-                    return;
-                }
-
-                var transmit = connection.GetTransmitSink();
-
-                var pcm = ConvertAudioToPcm(path);
-                await pcm.CopyToAsync(transmit);
-                await pcm.DisposeAsync();
+                // If the channel was not found, send a message indicating this
+                await ctx.RespondAsync($"No voice channel found with the name: {channelName}");
             }
-        }
-
-        [Command("leave")]
-        public static async Task LeaveCommand(CommandContext ctx)
-        {
-            var vnext = ctx.Client.GetVoiceNext();
-
-            if (ctx.Guild is not null)
-            {
-                var connection = vnext?.GetConnection(ctx.Guild);
-
-                if (connection == null)
-                {
-                    await ctx.RespondAsync("Not connected to a voice channel.");
-                    return;
-                }
-
-                connection.Disconnect();
-            }
-        }
-
-        private static Stream ConvertAudioToPcm(string filePath)
-        {
-            var ffmpeg = Process.Start(new ProcessStartInfo
-            {
-                FileName = "ffmpeg",
-                Arguments = $@"-i ""{filePath}"" -ac 2 -f s16le -ar 48000 pipe:1",
-                RedirectStandardOutput = true,
-                UseShellExecute = false
-            });
-
-            return ffmpeg?.StandardOutput.BaseStream ?? Stream.Null;
         }
     }
 }

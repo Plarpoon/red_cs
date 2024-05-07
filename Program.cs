@@ -34,6 +34,9 @@ namespace EvilBot
                 LoggerFactory = new Serilog.Extensions.Logging.SerilogLoggerFactory()
             });
 
+            // Call the method to enable VoiceNext
+            VoiceNextConfig.EnableVoiceNext(discordClient);
+
             // Create a new service collection and add your services
             var services = new ServiceCollection()
                 // Add other services as needed
